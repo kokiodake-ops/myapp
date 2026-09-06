@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    input { display: block; width: 100%; padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
+    li { border-bottom: 1px solid #ddd; padding: 12px 0; }
+    .memo { color: #666; font-size: 14px; }
+    ul { list-style: none; padding: 0; }
+  </style>
+</head>
+<body>
+  <h1>読書メモ</h1>
+  <input id="title" placeholder="本のタイトル">
+  <input id="memo" placeholder="ひとこと">
+  <button onclick="add()">追加</button>
+  <ul id="list"></ul>
+
+  <script>
+    async function add() {
+      const title = document.getElementById("title").value;
+      if (!title) return;
+      await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title, memo: document.getElementById("memo").value })
+      });
+      document.getElementById("title").value = "";
+      document.getElementById("memo").value = "";
+      load();
+    }
+
+    async function remove(id) {
+      await fetch("/api/books/" + id, { method: "DELETE" });
+      load();
+    }
+
+    async function load() {
+      const res = await fetch("/api/books");
+      const books = await res.json();
+      document.getElementById("list").innerHTML = books.map(b =>
+        `<li><strong>${b.title}</strong>
+         <button onclick="remove(${b.id})">削除</button>
+         <div class="memo">${b.memo || ""}</div></li>`
+      ).join("");
+    }
+
+    load();
+  </script>
+</body>
+</html>
