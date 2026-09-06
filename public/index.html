@@ -2,32 +2,59 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-    input { display: block; width: 100%; padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
+    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    input, select { padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
+    .full { display: block; width: 100%; }
+    .row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .row input { flex: 1; margin: 0; }
     li { border-bottom: 1px solid #ddd; padding: 12px 0; }
-    .memo { color: #666; font-size: 14px; }
     ul { list-style: none; padding: 0; }
+    .meta { color: #888; font-size: 13px; }
+    .memo { color: #555; font-size: 14px; margin-top: 4px; }
   </style>
 </head>
 <body>
   <h1>読書メモ</h1>
-  <input id="title" placeholder="本のタイトル">
-  <input id="memo" placeholder="ひとこと">
+
+  <input class="full" id="title" placeholder="本のタイトル">
+  <input class="full" id="author" placeholder="登録者名">
+  <input class="full" id="read_on" type="date">
+  <input class="full" id="memo" placeholder="ひとこと">
   <button onclick="add()">追加</button>
+
+  <hr style="margin:24px 0">
+
+  <div class="row">
+    <input id="q" placeholder="検索" oninput="load()">
+    <select id="sort" onchange="load()">
+      <option value="new">登録が新しい順</option>
+      <option value="old">登録が古い順</option>
+      <option value="title">タイトル順</option>
+      <option value="read">読了日が新しい順</option>
+    </select>
+  </div>
+
   <ul id="list"></ul>
 
   <script>
+    const $ = id => document.getElementById(id);
+
     async function add() {
-      const title = document.getElementById("title").value;
-      if (!title) return;
+      if (!$("title").value) return;
       await fetch("/api/books", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title, memo: document.getElementById("memo").value })
+        body: JSON.stringify({
+          title: $("title").value,
+          author: $("author").value,
+          read_on: $("read_on").value,
+          memo: $("memo").value
+        })
       });
-      document.getElementById("title").value = "";
-      document.getElementById("memo").value = "";
+      $("title").value = "";
+      $("memo").value = "";
       load();
     }
 
@@ -37,13 +64,16 @@
     }
 
     async function load() {
-      const res = await fetch("/api/books");
+      const res = await fetch("/api/books?q=" + encodeURIComponent($("q").value) + "&sort=" + $("sort").value);
       const books = await res.json();
-      document.getElementById("list").innerHTML = books.map(b =>
-        `<li><strong>${b.title}</strong>
-         <button onclick="remove(${b.id})">削除</button>
-         <div class="memo">${b.memo || ""}</div></li>`
-      ).join("");
+      $("list").innerHTML = books.map(b => `
+        <li>
+          <strong>${b.title}</strong>
+          <button onclick="remove(${b.id})">削除</button>
+          <div class="meta">${b.author || "名無し"}${b.read_on ? " / 読了 " + b.read_on.slice(0, 10) : ""}</div>
+          <div class="memo">${b.memo || ""}</div>
+        </li>
+      `).join("");
     }
 
     load();

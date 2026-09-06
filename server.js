@@ -25,14 +25,29 @@ app.use(express.json());
 app.use(express.static("public"));
 
 app.get("/api/books", async (req, res) => {
-  const result = await pool.query("SELECT * FROM books ORDER BY id DESC");
+  const q = req.query.q || "";
+  const sortMap = {
+    new: "created_at DESC",
+    old: "created_at ASC",
+    title: "title ASC",
+    read: "read_on DESC NULLS LAST"
+  };
+  const order = sortMap[req.query.sort] || sortMap.new;
+
+  const result = await pool.query(
+    `SELECT * FROM books
+     WHERE title ILIKE $1 OR memo ILIKE $1 OR author ILIKE $1
+     ORDER BY ${order}`,
+    ["%" + q + "%"]
+  );
   res.json(result.rows);
 });
 
 app.post("/api/books", async (req, res) => {
   await pool.query(
-    "INSERT INTO books (title, memo) VALUES ($1, $2)",
-    [req.body.title, req.body.memo]
+    `INSERT INTO books (title, memo, author, read_on)
+     VALUES ($1, $2, $3, $4)`,
+    [req.body.title, req.body.memo, req.body.author, req.body.read_on || null]
   );
   res.json({ ok: true });
 });
