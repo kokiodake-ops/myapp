@@ -3,31 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>サクヤ読書管理システム</title>
   <style>
-    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; }
-    input, select { padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
-    .full { display: block; width: 100%; }
-    .row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .row input { flex: 1; margin: 0; }
-    li { border-bottom: 1px solid #ddd; padding: 12px 0; }
-    ul { list-style: none; padding: 0; }
-    .meta { color: #888; font-size: 13px; }
-    .memo { color: #555; font-size: 14px; margin-top: 4px; }
+    :root {
+      --bg: #faf9f7;
+      --card: #ffffff;
+      --ink: #1c1a17;
+      --sub: #8a8478;
+      --line: #e8e4dd;
+      --accent: #2d5f4c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      line-height: 1.7;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 48px 20px 80px; }
+
+    header { margin-bottom: 32px; }
+    h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: 0.02em; }
+    .lead { color: var(--sub); font-size: 13px; margin: 0; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    label { display: block; font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+    .field { margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+      transition: border-color .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    textarea { resize: vertical; min-height: 70px; }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .85; }
+
+    .toolbar { display: flex; gap: 12px; margin-bottom: 20px; }
+    .toolbar input { flex: 1; }
+    .toolbar select { width: auto; }
+
+    .count { font-size: 12px; color: var(--sub); margin-bottom: 12px; }
+
+    ul { list-style: none; padding: 0; margin: 0; }
+    li {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .title { font-size: 16px; font-weight: 600; }
+    .meta { font-size: 12px; color: var(--sub); margin-top: 2px; }
+    .memo { font-size: 14px; margin-top: 10px; white-space: pre-wrap; }
+    .tag {
+      display: inline-block;
+      background: #f0ede8;
+      color: var(--sub);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 11px;
+      margin-right: 6px;
+    }
+    .del {
+      position: absolute; top: 16px; right: 16px;
+      background: none; color: var(--sub);
+      padding: 4px 8px; font-size: 12px;
+    }
+    .del:hover { color: #c0392b; opacity: 1; }
+
+    .empty {
+      text-align: center; color: var(--sub);
+      padding: 56px 0; font-size: 14px;
+      border: 1px dashed var(--line); border-radius: 12px;
+    }
+
+    @media (max-width: 560px) {
+      .grid, .toolbar { grid-template-columns: 1fr; display: block; }
+      .toolbar input, .toolbar select { width: 100%; margin-bottom: 10px; }
+    }
   </style>
 </head>
 <body>
-  <h1>読書メモ</h1>
+<div class="wrap">
 
-  <input class="full" id="title" placeholder="本のタイトル">
-  <input class="full" id="author" placeholder="登録者名">
-  <input class="full" id="read_on" type="date">
-  <input class="full" id="memo" placeholder="ひとこと">
-  <button onclick="add()">追加</button>
+  <header>
+    <h1>読書メモ</h1>
+    <p class="lead">読んだ本と、そのとき考えたことを残す</p>
+  </header>
 
-  <hr style="margin:24px 0">
+  <div class="card">
+    <div class="field">
+      <label for="title">タイトル</label>
+      <input id="title" placeholder="例：insight">
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label for="author">登録者</label>
+        <input id="author" placeholder="名前">
+      </div>
+      <div class="field">
+        <label for="read_on">読了日</label>
+        <input id="read_on" type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label for="memo">メモ</label>
+      <textarea id="memo" placeholder="印象に残ったこと、使えそうな考え方など"></textarea>
+    </div>
+    <button onclick="add()">追加する</button>
+  </div>
 
-  <div class="row">
-    <input id="q" placeholder="検索" oninput="load()">
+  <div class="toolbar">
+    <input id="q" placeholder="タイトル・メモ・登録者から検索" oninput="load()">
     <select id="sort" onchange="load()">
       <option value="new">登録が新しい順</option>
       <option value="old">登録が古い順</option>
@@ -36,47 +155,65 @@
     </select>
   </div>
 
+  <div class="count" id="count"></div>
   <ul id="list"></ul>
 
-  <script>
-    const $ = id => document.getElementById(id);
+</div>
 
-    async function add() {
-      if (!$("title").value) return;
-      await fetch("/api/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: $("title").value,
-          author: $("author").value,
-          read_on: $("read_on").value,
-          memo: $("memo").value
-        })
-      });
-      $("title").value = "";
-      $("memo").value = "";
-      load();
-    }
+<script>
+  const $ = id => document.getElementById(id);
 
-    async function remove(id) {
-      await fetch("/api/books/" + id, { method: "DELETE" });
-      load();
-    }
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-    async function load() {
-      const res = await fetch("/api/books?q=" + encodeURIComponent($("q").value) + "&sort=" + $("sort").value);
-      const books = await res.json();
-      $("list").innerHTML = books.map(b => `
-        <li>
-          <strong>${b.title}</strong>
-          <button onclick="remove(${b.id})">削除</button>
-          <div class="meta">${b.author || "名無し"}${b.read_on ? " / 読了 " + b.read_on.slice(0, 10) : ""}</div>
-          <div class="memo">${b.memo || ""}</div>
-        </li>
-      `).join("");
-    }
-
+  async function add() {
+    if (!$("title").value.trim()) return;
+    await fetch("/api/books", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: $("title").value,
+        author: $("author").value,
+        read_on: $("read_on").value,
+        memo: $("memo").value
+      })
+    });
+    $("title").value = "";
+    $("memo").value = "";
     load();
-  </script>
+  }
+
+  async function remove(id) {
+    if (!confirm("削除しますか？")) return;
+    await fetch("/api/books/" + id, { method: "DELETE" });
+    load();
+  }
+
+  async function load() {
+    const res = await fetch("/api/books?q=" + encodeURIComponent($("q").value) + "&sort=" + $("sort").value);
+    const books = await res.json();
+
+    $("count").textContent = books.length ? books.length + " 件" : "";
+
+    if (!books.length) {
+      $("list").innerHTML = '<div class="empty">まだ登録がありません</div>';
+      return;
+    }
+
+    $("list").innerHTML = books.map(b => `
+      <li>
+        <button class="del" onclick="remove(${b.id})">削除</button>
+        <div class="title">${esc(b.title)}</div>
+        <div class="meta">
+          ${b.author ? '<span class="tag">' + esc(b.author) + '</span>' : ''}
+          ${b.read_on ? "読了 " + esc(b.read_on.slice(0, 10).replace(/-/g, "/")) : ""}
+        </div>
+        ${b.memo ? '<div class="memo">' + esc(b.memo) + '</div>' : ''}
+      </li>
+    `).join("");
+  }
+
+  load();
+</script>
 </body>
 </html>
