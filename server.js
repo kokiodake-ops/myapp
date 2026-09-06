@@ -1,35 +1,46 @@
 const express = require("express");
-const Database = require("better-sqlite3");
+const { Pool } = require("pg");
 const app = express();
 
-const db = new Database("books.db");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes("localhost")
+    ? false
+    : { rejectUnauthorized: false }
+});
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS books (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    memo TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+async function init() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS books (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      memo TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+}
+init();
 
 app.use(express.json());
 app.use(express.static("public"));
 
-app.get("/api/books", (req, res) => {
-  const books = db.prepare("SELECT * FROM books ORDER BY id DESC").all();
-  res.json(books);
+app.get("/api/books", async (req, res) => {
+  const result = await pool.query("SELECT * FROM books ORDER BY id DESC");
+  res.json(result.rows);
 });
 
-app.post("/api/books", (req, res) => {
-  db.prepare("INSERT INTO books (title, memo) VALUES (?, ?)")
-    .run(req.body.title, req.body.memo);
+app.post("/api/books", async (req, res) => {
+  await pool.query(
+    "INSERT INTO books (title, memo) VALUES ($1, $2)",
+    [req.body.title, req.body.memo]
+  );
   res.json({ ok: true });
 });
 
-app.delete("/api/books/:id", (req, res) => {
-  db.prepare("DELETE FROM books WHERE id = ?").run(req.params.id);
+app.delete("/api/books/:id", async (req, res) => {
+  await pool.query("DELETE FROM books WHERE id = $1", [req.params.id]);
   res.json({ ok: true });
 });
 
-app.listen(3000, () => console.log("http://localhost:3000"));
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log("running on port " + port));
