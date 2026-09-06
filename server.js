@@ -21,6 +21,7 @@ async function init() {
   await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS author TEXT`);
   await pool.query(`ALTER TABLE books ADD COLUMN IF NOT EXISTS read_on DATE`);
 }
+init();
 
 app.use(express.json());
 app.use(express.static("public"));
